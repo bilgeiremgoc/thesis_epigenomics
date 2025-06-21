@@ -66,3 +66,63 @@ writeXStringSet(seqs, filepath = "SLE_dmp_cpg_sequences.fasta")
 
 writexl::write_xlsx(dmp_teze_uygun, "SLE_dmp_teze_uygun.xlsx")
 
+
+
+library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+
+ann450k <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+
+cg_ids <- c("cg05696877", "cg21549285", "cg08122652", "cg22930808",
+            "cg00959259", "cg14293575", "cg14392283", "cg10549986",
+            "cg07839457", "cg26846609", "cg21193926", "cg08514194")
+
+matched_genes <- ann450k[cg_ids, c("Name", "UCSC_RefGene_Name")]
+
+matched_genes
+
+
+genes_raw <- matched_genes$UCSC_RefGene_Name
+genes_split <- unlist(strsplit(genes_raw, split = ";"))
+genes <- unique(genes_split[genes_split != ""]) 
+
+gene_entrez <- bitr(genes,
+                    fromType = "SYMBOL",
+                    toType = "ENTREZID",
+                    OrgDb = org.Hs.eg.db)
+
+go_result <- enrichGO(gene = gene_entrez$ENTREZID,
+                      OrgDb = org.Hs.eg.db,
+                      ont = "BP",
+                      pAdjustMethod = "BH",
+                      pvalueCutoff = 0.05,
+                      readable = TRUE)
+
+dotplot(go_result, showCategory = 10)
+
+go_results_df <- as.data.frame(go_result)
+writexl::write_xlsx(go_results_df, "SLE_GO_results.xlsx")
+
+kegg_results <- enrichKEGG(gene = gene_entrez$ENTREZID,
+                           organism = 'hsa',
+                           pvalueCutoff = 0.05)
+dotplot(kegg_results, showCategory = 15)
+
+KEGG_results_df <- as.data.frame(kegg_results)
+
+writexl::write_xlsx(KEGG_results_df, "SLE_kegg_results.xlsx")
+
+
+
+reactome_results <- enrichPathway(gene = gene_entrez$ENTREZID,
+                                  organism = "human",
+                                  pvalueCutoff = 0.05,
+                                  readable = TRUE)
+
+dotplot(reactome_results, showCategory = 20)
+
+
+reactom_results_df <- as.data.frame(reactome_results)
+
+writexl::write_xlsx(reactom_results_df, "SLE_reactome_results.xlsx")
+
+
