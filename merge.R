@@ -43,4 +43,4 @@ ml_data <- ml_data[, -1]
 
 writexl::write_xlsx(ml_data, path = "ml_data.xlsx")
 
-
+write.csv(ml_data, "epigenetic_expression_matrix.csv", row.names = TRUE)
