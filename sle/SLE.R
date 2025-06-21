@@ -1,7 +1,7 @@
 
 library(limma)
 
-beta_file <- "C:/Users/bilge/Documents/epigenomic_analysis/sle/GSE59250_average_betas.txt"
+beta_file <- "sle/GSE59250_average_betas.txt"
 
 beta_matrix <- read.delim(beta_file, row.names = 1, check.names = FALSE)
 
@@ -48,11 +48,10 @@ library(Biostrings)
 library(dplyr)
 
 dmp_teze_uygun <- dmp_sig %>%
-  filter(adj.P.Val < 0.01, abs(logFC) > 1.5, !is.na(Gene)) %>%
+  filter(adj.P.Val < 0.01, abs(logFC) > 1, !is.na(Gene)) %>%
   mutate(start = pos - 100,
          end = pos + 100,
-         name = rownames(.)) %>%
-  select(chr, start, end, name, strand)
+         name = rownames(.))
 
 seqs <- getSeq(Hsapiens,
                names = dmp_teze_uygun$chr,
@@ -68,20 +67,8 @@ writexl::write_xlsx(dmp_teze_uygun, "SLE_dmp_teze_uygun.xlsx")
 
 
 
-library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 
-ann450k <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-
-cg_ids <- c("cg05696877", "cg21549285", "cg08122652", "cg22930808",
-            "cg00959259", "cg14293575", "cg14392283", "cg10549986",
-            "cg07839457", "cg26846609", "cg21193926", "cg08514194")
-
-matched_genes <- ann450k[cg_ids, c("Name", "UCSC_RefGene_Name")]
-
-matched_genes
-
-
-genes_raw <- matched_genes$UCSC_RefGene_Name
+genes_raw <- dmp_teze_uygun$Gene
 genes_split <- unlist(strsplit(genes_raw, split = ";"))
 genes <- unique(genes_split[genes_split != ""]) 
 
