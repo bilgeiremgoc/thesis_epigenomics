@@ -29,5 +29,18 @@ merged_epigenetic_clean <- merged_epigenetic %>%
   filter(!is.na(Gene) & Gene != "") %>%
   distinct(Gene, .keep_all = TRUE)
 
+merged_epigenetic_clean$Gene <- sapply(strsplit(merged_epigenetic_clean$Gene, ";"), `[`, 1)
+
+merged_epigenetic_clean[is.na(merged_epigenetic_clean)] <- 0
+
+
 writexl::write_xlsx(merged_epigenetic_clean, path = "epigenetic_expression_matrix.xlsx")
+
+ml_data <- ml_data[!duplicated(ml_data$Gene), ]
+ml_data <- as.data.frame(ml_data)  # tibble → data.frame
+rownames(ml_data) <- ml_data$Gene
+ml_data <- ml_data[, -1]  
+
+writexl::write_xlsx(ml_data, path = "ml_data.xlsx")
+
 
