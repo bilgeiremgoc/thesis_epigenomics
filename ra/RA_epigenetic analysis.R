@@ -110,6 +110,50 @@ names(seqs) <- bed_df$name
 writeXStringSet(seqs, filepath = "dmp_cpg_sequences.fasta")
 
 
+library(readxl)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+
+df <- read_excel("ra/dmp_teze_uygun.xlsx")
+
+gene_column <- df$UCSC_RefGene_Name 
+
+genes <- unlist(strsplit(gene_column, ";"))
+genes <- unique(trimws(genes))
+genes <- genes[genes != ""]
+
+gene_entrez <- bitr(genes,
+                    fromType = "SYMBOL",
+                    toType = "ENTREZID",
+                    OrgDb = org.Hs.eg.db)
+
+go_results <- enrichGO(gene = gene_entrez$ENTREZID,
+                       OrgDb = org.Hs.eg.db,
+                       ont = "BP", # Biological Process
+                       pAdjustMethod = "BH",
+                       pvalueCutoff = 0.05,
+                       readable = TRUE)
+
+head(go_results)
+dotplot(go_results, showCategory = 15)
+
+go_results_df <- as.data.frame(go_results)
+
+writexl::write_xlsx(go_results_df, "RA_GO_results.xlsx")
 
 
+kegg_results <- enrichKEGG(gene = gene_entrez$ENTREZID,
+                           organism = 'hsa',
+                           pvalueCutoff = 0.05)
+dotplot(kegg_results, showCategory = 15)
+
+
+reactome_results <- enrichPathway(gene = gene_entrez$ENTREZID,
+                                  organism = "human",
+                                  pvalueCutoff = 0.05,
+                                  readable = TRUE)
+
+dotplot(reactome_results, showCategory = 20)
+
+#NO RESULTS FOR KEGG AND REACTOME 
 
